@@ -311,8 +311,9 @@ Arch Linux 通常情况下使用 `libglvnd` 来实现不同 OpenGL 提供者之�
 目前 `rgx_triangle_test` 等闭源测试可以正常运行，但 EGL 组件有问题，不能正常创建 Wayland 上下文：
 - glmark2-es2-drm 提示“Failed to find suitable EGL config”
 - eglinfo 提示“Wayland platform: eglinfo: eglInitialize failed”
-- sway 日志显示其试图向某个系统设备（具有 EGL client extension）查询 DRM 文件地址然后出错，但能正常加载 Imagination 的 OpenGL ES 驱动，然后指出这个驱动不支持 `GL_EXT_unpack_subimage` 并因此“Failed to create GLES2 renderer”，无显示
-- weston 无显示，日志（完整命令行为 `WAYLAND_DEBUG=1 weston --continue-without-input --xwayland --debug --logger-scopes=log,drm-backend`）无明显问题
+- sway 日志显示其试图向某个系统设备（具有 EGL client extension）查询 DRM 文件地址然后出错，但能正常加载 Imagination 的 OpenGL ES 驱动，然后指出这个驱动不支持 `GL_EXT_unpack_subimage` 并因此“Failed to create GLES2 renderer”，回退到 pixman CPU 渲染
+- weston 日志（完整命令行为 `WAYLAND_DEBUG=1 weston --continue-without-input --xwayland --debug --logger-scopes=log,drm-backend`）无明显问题
+- glmark2 非 drm 版本因为 llvmpipe 的问题会爆 Segmentation fault
 
 Vulkan 驱动可以正确加载，但某个测试显示缺少 WSI 扩展（用于在 Wayland 等中创建 Vulkan 上下文，目前由 Mesa 分支提供），可能是在 pull 上游 amber 时不慎导致合并出错。因为上游 Mesa [更换了编写 WSI 扩展的框架](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/13234>)，所以要靠自己（依靠臆想）理解进行 [修正](https://github.com/shirok1/mesa/commit/5e48a6ba47dbcd89d0fb5594e8c6b7c7345b9b6c)，有待用回 Imagination 提供的原始版本测试。
 
