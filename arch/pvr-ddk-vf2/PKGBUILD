@@ -1,0 +1,117 @@
+pkgname=(pvr-ddk-vf2 pvr-ddk-vf2-syscl pvr-ddk-vf2-syses pvr-ddk-vf2-tools)
+pkgver=1.17.6210866
+pkgrel=1
+pkgdesc="PowerVR B-Series BXE-4-32 GPU driver, distributed for VisionFive 2 by Starfive"
+arch=('riscv64')
+url="https://github.com/starfive-tech/soft_3rdpart"
+license=('custom')
+source=("https://github.com/starfive-tech/soft_3rdpart/raw/JH7110_VisionFive2_devel/IMG_GPU/out/img-gpu-powervr-bin-${pkgver}.tar.gz")
+sha256sums=('8ef5eba77c776e0d4444d819e12c64bfa8eee0ae2cdf90b6eb7a3a9df7bd7ef2')
+
+# usage: ln_multi <target> <link>...
+ln_multi() {
+  for ln_target in ${@:2}; do
+    ln -s $1 "${pkgdir}/usr/lib/${ln_target}"
+  done
+}
+
+# usage: install_lib_ln <source_path> <source_name> <link>...
+install_lib_ln() {
+  install -Dvm644 "$1$2" -t "${pkgdir}/usr/lib"
+  ln_multi ${@:2}
+}
+
+# usage: install_headers <dir>...
+install_headers() {
+  for dir in $@; do
+    for i in "staging/usr/include/${dir}/"*.h; do
+      install -Dvm644 "${i}" -t "${pkgdir}/usr/include/${dir}"
+    done
+  done
+}
+
+package_pvr-ddk-vf2() {
+  depends=('libdrm' 'vulkan-icd-loader')
+  provides=('opencl-driver' 'opengl-driver' 'vulkan-driver')
+  optdepends=("pvr-ddk-vf2-syscl: if you want it to take over OpenCL"
+              "pvr-ddk-vf2-syses: if you want it to take over OpenGL ES"
+              "pvr-ddk-vf2-tools: some tools for test")
+  cd img-gpu-powervr-bin-${pkgver}
+
+  install_lib_ln target/usr/lib/ libsrv_um.so.${pkgver} libsrv_um.so
+  install_lib_ln target/usr/lib/ libusc.so.${pkgver} libusc.so
+  install_lib_ln target/usr/lib/ libpvr_dri_support.so.${pkgver} libpvr_dri_support.so
+  install_lib_ln target/usr/lib/ libufwriter.so.${pkgver} libufwriter.so
+  install_lib_ln target/usr/lib/ libsutu_display.so.${pkgver} libsutu_display.so
+  install_lib_ln target/usr/lib/ libglslcompiler.so.${pkgver} libglslcompiler.so
+
+  install_lib_ln target/usr/lib/ libGLESv1_CM_PVR_MESA.so.${pkgver} libGLESv1_CM_PVR_MESA.so
+  install_lib_ln target/usr/lib/ libGLESv2_PVR_MESA.so.${pkgver} libGLESv2_PVR_MESA.so
+  install_lib_ln target/usr/lib/ libPVROCL.so.${pkgver} libPVROCL.so libPVROCL.so.1
+  install_lib_ln target/usr/lib/ libPVRScopeServices.so.${pkgver} libPVRScopeServices.so
+  install_lib_ln target/usr/lib/ libVK_IMG.so.${pkgver} libVK_IMG.so libVK_IMG.so.1
+
+  install_headers drv/CL drv/EGL drv/GLES drv/GLES3
+
+  # You might have already copied this!
+  # for i in target/lib/firmware/*; do
+    # install -Dvm644 "${i}" -t "${pkgdir}/usr/lib/firmware"
+  # done
+
+  install -Dvm644 target/etc/vulkan/icd.d/icdconf.json -t "${pkgdir}/usr/share/vulkan/icd.d"
+  install -Dvm644 target/etc/OpenCL/vendors/IMG.icd -t "${pkgdir}/etc/OpenCL/vendors"
+  mv ${pkgdir}/usr/share/vulkan/icd.d/icdconf.json ${pkgdir}/usr/share/vulkan/icd.d/pvr_icd.json
+  mv ${pkgdir}/etc/OpenCL/vendors/IMG.icd ${pkgdir}/etc/OpenCL/vendors/pvr.icd
+  # cp target/etc/vulkan/icd.d/icdconf.json ${pkgdir}/usr/share/vulkan/icd.d/pvr_icd.json
+  # cp target/etc/OpenCL/vendors/IMG.icd ${pkgdir}/etc/OpenCL/vendors/pvr.icd
+  # chown root:root ${pkgdir}/usr/share/vulkan/icd.d/pvr_icd.json
+  # chown root:root ${pkgdir}/etc/OpenCL/vendors/pvr.icd
+  # chmod 644 ${pkgdir}/usr/share/vulkan/icd.d/pvr_icd.json
+  # chmod 644 ${pkgdir}/etc/OpenCL/vendors/pvr.icd
+}
+
+package_pvr-ddk-vf2-syses() {
+  pkgdesc+=' (replace system OpenGL driver dispatch loader, note that this will cause Mesa fail!)'
+  depends=('pvr-ddk-vf2')
+  provides=('libgles')
+  provides+=(libGLESv1_CM.so libGLESv2.so)
+  conflicts=('libglvnd')
+
+  cd img-gpu-powervr-bin-${pkgver}
+
+  mkdir -p ${pkgdir}/usr/lib
+  ln_multi libGLESv1_CM_PVR_MESA.so.${pkgver} libGLESv1_CM.so libGLESv1_CM.so.1
+  ln_multi libGLESv2_PVR_MESA.so.${pkgver} libGLESv2.so libGLESv2.so.2
+
+  install_headers GLES GLES2 GLES3
+  # install_headers EGL GLES GLES2 GLES3 KHR
+  install -Dvm644 staging/usr/lib/pkgconfig/glesv2.pc -t "${pkgdir}/usr/lib/pkgconfig"
+  install -Dvm644 staging/usr/lib/pkgconfig/glesv3.pc -t "${pkgdir}/usr/lib/pkgconfig"
+}
+
+package_pvr-ddk-vf2-syscl() {
+  pkgdesc+=' (replace system OpenCL ICD loader)'
+  depends=('pvr-ddk-vf2')
+  provides=('libcl')
+  provides+=(libOpenCL.so)
+  conflicts=('ocl-icd')
+
+  cd img-gpu-powervr-bin-${pkgver}
+
+  mkdir -p ${pkgdir}/usr/lib
+  ln_multi libPVROCL.so.${pkgver} libOpenCL.so.1 libOpenCL.so
+
+  install_headers CL
+}
+
+package_pvr-ddk-vf2-tools() {
+  pkgdesc+=' (tools)'
+  depends=('pvr-ddk-vf2')
+
+  cd img-gpu-powervr-bin-${pkgver}
+
+  for i in target/usr/local/bin/*; do
+    install -Dvm755 "${i}" -t "${pkgdir}/usr/bin"
+  done
+}
+
