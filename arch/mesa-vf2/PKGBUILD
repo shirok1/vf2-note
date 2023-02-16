@@ -5,9 +5,9 @@ pkgrel=1
 arch=('riscv64')
 makedepends=('git' 'python-mako' 'xorgproto'
               'libxml2' 'libx11' 'elfutils' 'libxrandr'
-              'wayland-protocols' 'meson' 'ninja' 'glslang' 'libclc')
+              'wayland-protocols' 'meson' 'ninja' 'glslang' 'libclc' 'valgrind')
 depends=('pvr-ddk-vf2' 'libdrm' 'libxxf86vm' 'libxdamage' 'libxshmfence' 'libelf'
-         'libunwind' 'wayland' 'lm_sensors' 'libclc' 'vulkan-icd-loader' 'zstd' 'expat')
+         'libunwind' 'libglvnd' 'wayland' 'libclc' 'vulkan-icd-loader' 'zstd' 'expat')
 optdepends=('opengl-man-pages: for the OpenGL API man pages')
 provides=('mesa' 'vulkan-mesa-layer' 'vulkan-swrast' 'vulkan-driver' 'mesa-libgl' 'opengl-driver' 'libgl' 'libegl')
 conflicts=('mesa' 'opencl-mesa' 'vulkan-intel' 'vulkan-radeon' 'vulkan-mesa-layer' 'libva-mesa-driver' 'mesa-vdpau' 'vulkan-swrast' 'mesa-libgl')
@@ -118,7 +118,7 @@ build () {
        -D gbm=enabled \
        -D gles1=disabled \
        -D gles2=disabled \
-       -D glvnd=false \
+       -D glvnd=true \
        -D glx=dri \
        -D libunwind=enabled \
        -D llvm=enabled \
