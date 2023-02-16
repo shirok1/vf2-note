@@ -285,7 +285,7 @@ img-gpu-powervr-bin-1.17.6210866/
 
 Starfive 的开发人员直接往 Buildroot 的 Mesa 打上了 Imagination 给他们的 [68 个 patch](https://github.com/starfive-tech/buildroot/tree/JH7110_VisionFive2_devel/package/mesa3d)，通过动态加载 `libpvr_dri_support.so` 在 DRI 框架下实现了 OpenGL 驱动（见 `drivers/dri/pvr/pvrcompat.c`）。不过 Mesa 在 21.3 版本后只保留了 Gallium 框架的驱动，把 DRI 框架给删了，所以这些 patch 后续也只能合并下 Amber 分支的更新（约等于没更新）。尝试了下在本地手动合并，结果在 [这里](https://github.com/shirok1/mesa/tree/jh7110-pvr)。另外，这些 patch 还包含了 Vulkan WSI 的实现（和窗体系统的集成）。
 
-题外话：Imagination 在 2022 年 3 月 22 日提交（准确的说是被 Mesa 方面合并）了 [一份 PowerVR Vulkan 驱动](https://cgit.freedesktop.org/mesa/mesa/commit/?id=8991e646411b73c1e03278267c80758e921f2352)，但是这个驱动**只**支持 GX6250、AXE-1-16M 和 BXS-4-64 三款 GPU，跟 JH7110 没有任何关系。
+题外话：Imagination 在 2022 年 3 月 22 日提交（准确的说是被 Mesa 方面合并）了 [一份 PowerVR Vulkan 驱动](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/15243)，但是这个驱动**只**支持 GX6250、AXE-1-16M 和 BXS-4-64 三款 GPU，跟 JH7110 没有任何关系。
 
 ### 给 Distro 打包
 
