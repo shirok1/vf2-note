@@ -277,10 +277,7 @@ img-gpu-powervr-bin-1.17.6210866/
 - `libVK_IMG.so`: Vulkan ICD 驱动
   - 动态链接到了 `libsrv_um.so`、`libufwriter.so` 和 `libusc.so`
   - 通过 `etc/vulkan/icd.d/icdconf.json` 来配置加载
-
-看起来可以直接用开源实现代替的有：
-
-- `libvulkan.so`: 应该是没“加料”的 Khronos 官方 ICD loader
+- `libvulkan.so`: ~~应该是没“加料”的 Khronos 官方 ICD loader~~ 大意了，仔细观察发现其依然硬编码了 `libVK_IMG.so` 的名称，硬编码的日志格式和 Khronos 的不同，甚至可能和 WSI 的加载有关！
 
 ### Mesa 分支
 
